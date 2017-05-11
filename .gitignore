@@ -1,0 +1,8 @@
+dist/
+dist-newstyle/
+.stack-work/
+output/*.log
+output/*.mp
+output/*.mps
+output/*.svg
+output/*.png

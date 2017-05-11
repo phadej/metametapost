@@ -1,0 +1,4 @@
+resolver: nightly-2017-04-01
+packages:
+- '.'
+- bound

@@ -1,0 +1,44 @@
+name:                metametapost
+version:             0
+synopsis:            Meta MetaPost
+description:
+  A Haskell EDSL to write MetaPost programs
+homepage:            https://github.com/phadej/metametapost
+license:             BSD3
+license-file:        LICENSE
+author:              Oleg Grenrus
+maintainer:          oleg.grenrus@iki.fi
+copyright:           (c) 2017 Oleg Grenrus
+category:            Language, Graphics
+build-type:          Simple
+extra-source-files:  ChangeLog.md
+cabal-version:       >=1.10
+
+library
+  exposed-modules:
+    MetaMetaPost
+    MetaMetaPost.Color
+    MetaMetaPost.Demos
+    MetaMetaPost.DSL
+    MetaMetaPost.Error
+    MetaMetaPost.PrettyPrinter
+    MetaMetaPost.Renamer
+    MetaMetaPost.STLC
+    MetaMetaPost.Simplifier
+    MetaMetaPost.TypeChecker
+    MetaMetaPost.TypeInferrer
+    MetaMetaPost.Types
+  build-depends:
+    base >=4.9 && <4.10,
+    bifunctors,
+    bound,
+    clock,
+    containers,
+    deriving-compat,
+    mtl,
+    recursion-schemes >= 5.0.1,
+    transformers,
+    wl-pprint
+  hs-source-dirs:      src
+  ghc-options:         -Wall
+  default-language:    Haskell2010
