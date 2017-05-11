@@ -1,9 +1,13 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module MetaMetaPost.Simplifier (simplify) where
+{-# LANGUAGE RankNTypes #-}
+module MetaMetaPost.Simplifier (
+    simplify,
+    simplifyMP,
+    ) where
 
 import Bound
-import Bound.Scope (transverseScope)
+import Bound.Scope (hoistScope, transverseScope)
 import Control.Monad.Except
 
 import MetaMetaPost.Types
@@ -54,3 +58,57 @@ simplifyPrim2 p x y = case iarity :: SArity arity of
     Arity2 -> (\x' y' -> floatTop (MPApp2 p (pure x') (pure y')))
         <$> simplify x
         <*> simplify y
+
+-- | Simplify 'MP'.
+--
+-- * Strip unused let-bindings
+--
+-- * Collapse bindings (sharing)
+--
+simplifyMP :: (Eq a, Eq ty) => MP ty a -> MP ty a
+simplifyMP = share . unusedBinds
+  where
+    -- let _ = e in b 
+    -- =>
+    -- b
+    unusedBinds :: MP ty a -> MP ty a
+    unusedBinds e@MPApp {} = e
+    unusedBinds (MPLet ty e b) = case closed (fromScope b') of
+        Just x -> x
+        Nothing -> MPLet ty e b'
+      where
+        b' = hoistScope unusedBinds b
+    
+    -- This is super ugly implementation atm.
+    --
+    -- let x = e in let y = e in b x y
+    -- =>
+    -- let x = e in b x x
+    share :: (Eq a, Eq ty) => MP ty a -> MP ty a
+    share e@MPApp {} = e
+    share (MPLet ty e b) = MPLet ty e (toScope (go (B ()) (F <$> e) (fromScope $ hoistScopeEq share b)))
+      where
+        -- replace matching let bindings 
+        go :: Eq a
+           => Var () a          -- variable
+           -> MPApp (Var () a)  -- variable value
+           -> MP ty (Var () a)  -- expression to process
+           -> MP ty (Var () a)
+        go _ _ x@(MPApp _)       = x
+        go v x (MPLet ty' e' b')
+            | x == e'            = instantiate1 (return v) b'' 
+            | otherwise          = MPLet ty' e' b''
+          where
+            b'' = toScope (go (F <$> v) (F <$> x) (fromScope b'))
+
+-- | 'hoistScope' but with 'Eq' constraint.
+hoistScopeEq :: (Functor f, Eq a, Eq b, Eq (g a))
+             => (forall x. Eq x => f x -> g x) -> Scope b f a -> Scope b g a
+hoistScopeEq t (Scope b) = Scope $ t (fmap t <$> b)
+
+{-
+hoist2Scope :: (Eq b, Eq (g a), Eq a, Functor f, Functor h, Monad g)
+            => (forall x. Eq x => h x -> f x -> g x)
+            -> h a -> Scope b f a -> Scope b g a
+hoist2Scope t x (Scope b) = Scope $ t (F . return <$> x) (fmap (t x) <$> b)
+-}
