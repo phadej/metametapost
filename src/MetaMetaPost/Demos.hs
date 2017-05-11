@@ -17,13 +17,18 @@ box1 =
     in draw_ $ cyclic_ $ path_ [z0, z1, z2, z3]
 
 -- | A bit differently defined box.
+--
+-- Demonstrates 'simplifyMP' optimizations.
+--
 box2 :: Expr SomePrim () a
-box2 = closed_ $
-    let_ "z0" (pair_ (dim_ 0) (dim_ 0)) $
-    let_ "z1" (pair_ (dim_ 1) (dim_ 0)) $
-    let_ "z2" (pair_ (dim_ 1) (dim_ 1)) $
-    let_ "z3" (pair_ (dim_ 0) (dim_ 1)) $
-    draw_ $ cyclic_ $ path_ ["z0", "z1", "z2", "z3"]
+box2 = closed_ $ let_ "x" (num_ 42) (semicolon_ box box)
+  where
+    box =
+        let_ "z0" (pair_ (dim_ 0) (dim_ 0)) $
+        let_ "z1" (pair_ (dim_ 1) (dim_ 0)) $
+        let_ "z2" (pair_ (dim_ 1) (dim_ 1)) $
+        let_ "z3" (pair_ (dim_ 0) (dim_ 1)) $
+        draw_ $ cyclic_ $ path_ ["z0", "z1", "z2", "z3"]
 
 -- | MetaMetaPost module graph.
 modules :: UExpr' a

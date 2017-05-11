@@ -67,7 +67,7 @@ metametapost e = do
     tys <- bimap (:[]) id $ typecheck somePrimTy (vacuous te)
     unless (any (== TyScalar SStmt) tys) $
         throwError (map (("Invalid main type: " ++) . show) $ toList tys)
-    mp <- bimap (:[]) rename $ simplify te
+    mp <- bimap (:[]) (rename . simplifyMP) $ simplify te
     mp' <- maybe (throwError ["Not-closed"]) pure $ closed mp
     pure (prettyprint mp')
 
